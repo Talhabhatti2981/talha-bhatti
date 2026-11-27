@@ -1,28 +1,11 @@
 import "./globals.css";
-import { Cinzel, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
-
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  weight: ["500", "700", "900"],
-  variable: "--font-editorial",
-});
-
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-body",
-});
-
-const mono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-tc",
-});
-
 export const metadata = {
-  title: "Talha Bhatti — Video Editor",
+  title: "Talha Bhatti | Video Editor and Colorist",
   description:
-    "Portfolio of Talha Bhatti, a video editor and colorist. Commercial films, music videos, documentaries, DaVinci Resolve grading, and social cutdowns.",
+    "Explore Talha Bhatti’s video editing portfolio. Commercial video editing, music videos, documentary editing, DaVinci Resolve color grading and social media videos.",
+  keywords: ["Talha Bhatti", "video editor", "video editing portfolio", "color grading", "commercial video editing", "music video editing", "documentary editing", "social media video editing"],
+  openGraph: { title: "Talha Bhatti | Video Editor and Colorist", description: "Picture editing, color grading and sound for films, brands and social content.", type: "website", locale: "en_US" },
+  twitter: { card: "summary", title: "Talha Bhatti | Video Editor and Colorist", description: "Explore films, editing projects and color grading by Talha Bhatti." },
   icons: {
     icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
     apple: "/logo.svg",
@@ -33,7 +16,6 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${cinzel.variable} ${jakarta.variable} ${mono.variable}`}
     >
       <body className="antialiased">{children}</body>
     </html>

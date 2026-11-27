@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import * as THREE from "three";
+
 import {
   Play,
   Film,
@@ -28,6 +28,7 @@ import {
   CONTACT_EMAIL,
   showreel,
   projects,
+  recentFilms,
   caseStudies,
   stages,
   arsenal,
@@ -46,11 +47,11 @@ const ICONS = {
 };
 
 const NAV = [
-  { id: "hero", label: "01. STUDIO" },
-  { id: "vault", label: "02. ARCHIVE" },
-  { id: "timeline", label: "03. PIPELINE" },
-  { id: "arsenal", label: "04. ARSENAL" },
-  { id: "booking", label: "05. BOOK" },
+  { id: "hero", label: "Studio" },
+  { id: "vault", label: "Films" },
+  { id: "timeline", label: "Process" },
+  { id: "arsenal", label: "Tools" },
+  { id: "booking", label: "Contact" },
 ];
 
 export default function Portfolio() {
@@ -95,6 +96,23 @@ export default function Portfolio() {
   }, [selectedVideo, briefcaseOpen]);
 
   useEffect(() => {
+    if (!selectedVideo && !briefcaseOpen) return;
+    const previous = document.activeElement;
+    const dialog = document.querySelector('[role="dialog"]');
+    const focusable = () => [...dialog.querySelectorAll('button, a[href], video[controls], [tabindex="0"]')].filter(el => el.getClientRects().length);
+    focusable()[0]?.focus();
+    const trap = (event) => {
+      if (event.key !== "Tab") return;
+      const items = focusable();
+      const first = items[0], last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener("keydown", trap);
+    return () => { document.removeEventListener("keydown", trap); previous?.focus(); };
+  }, [selectedVideo, briefcaseOpen]);
+
+  useEffect(() => {
     const onKey = (event) => {
       if (event.key !== "Escape") return;
       setSelectedVideo(null);
@@ -105,9 +123,9 @@ export default function Portfolio() {
   }, []);
 
   return (
-    <div className="bg-[#09090B] text-[#F4F1EA] min-h-screen font-body selection:bg-[#E5B869] selection:text-[#09090B] overflow-x-hidden">
+    <div className="bg-[#101012] text-[#F4F1EA] min-h-screen font-body selection:bg-[#E5B869] selection:text-[#09090B] overflow-x-hidden">
       <ScrollProgress />
-      <CustomCursor />
+
       <Navbar
         scrollTo={scrollTo}
         activeSection={activeSection}
@@ -177,61 +195,6 @@ function ScrollProgress() {
   return <div ref={barRef} className="scroll-progress" />;
 }
 
-function CustomCursor() {
-  const ringRef = useRef(null);
-  const dotRef = useRef(null);
-
-  useEffect(() => {
-    const fine = window.matchMedia("(pointer: fine)").matches;
-    if (!fine) return undefined;
-
-    document.body.classList.add("has-custom-cursor");
-    let x = window.innerWidth / 2;
-    let y = window.innerHeight / 2;
-    let ringX = x;
-    let ringY = y;
-    let frame = 0;
-
-    const onMove = (event) => {
-      x = event.clientX;
-      y = event.clientY;
-      if (dotRef.current) {
-        dotRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-      }
-      const field = event.target.closest("input, textarea, select");
-      const hot = !field && event.target.closest("a, button, [data-cursor]");
-      ringRef.current?.classList.toggle("is-hot", Boolean(hot));
-      if (ringRef.current) ringRef.current.style.opacity = field ? "0" : "1";
-      if (dotRef.current) dotRef.current.style.opacity = field ? "0" : "1";
-    };
-
-    const loop = () => {
-      ringX += (x - ringX) * 0.18;
-      ringY += (y - ringY) * 0.18;
-      if (ringRef.current) {
-        ringRef.current.style.transform = `translate3d(${ringX}px, ${ringY}px, 0)`;
-      }
-      frame = requestAnimationFrame(loop);
-    };
-
-    window.addEventListener("mousemove", onMove);
-    frame = requestAnimationFrame(loop);
-
-    return () => {
-      document.body.classList.remove("has-custom-cursor");
-      window.removeEventListener("mousemove", onMove);
-      cancelAnimationFrame(frame);
-    };
-  }, []);
-
-  return (
-    <>
-      <div ref={ringRef} className="cursor-ring" />
-      <div ref={dotRef} className="cursor-dot" />
-    </>
-  );
-}
-
 function Navbar({ scrollTo, activeSection, onOpenBriefcase }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -244,9 +207,9 @@ function Navbar({ scrollTo, activeSection, onOpenBriefcase }) {
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-40 transition-all duration-500 ${
+      className={`fixed top-0 inset-x-0 z-40 transition-colors duration-500 ${
         scrolled
-          ? "bg-[#09090B]/90 backdrop-blur-xl border-b border-[#E5B869]/20 py-3 shadow-2xl"
+          ? "bg-[#101012]/90  border-b border-[#F1EEE7]/10 py-3 "
           : "bg-transparent py-5"
       }`}
     >
@@ -258,14 +221,14 @@ function Navbar({ scrollTo, activeSection, onOpenBriefcase }) {
           <img
             src="/logo.svg"
             alt="Talha Bhatti logo"
-            className="w-11 h-11 rounded-full group-hover:scale-105 transition-transform duration-500"
+            className="w-11 h-11 rounded-full  transition-transform duration-500"
           />
           <div>
-            <div className="font-editorial font-bold text-lg tracking-[0.16em] text-[#F4F1EA]">
-              TALHA <span className="text-[#E5B869]">BHATTI</span>
+            <div className="font-editorial font-medium text-lg tracking-normal text-[#F4F1EA]">
+              Talha <span className="text-[#E5B869]">Bhatti</span>
             </div>
-            <div className="font-tc text-[10px] text-[#E5B869] tracking-[0.22em]">
-              EDITOR & COLORIST
+            <div className="font-tc text-xs text-[#E5B869] tracking-normal">
+              Editor & colorist
             </div>
           </div>
         </button>
@@ -275,7 +238,7 @@ function Navbar({ scrollTo, activeSection, onOpenBriefcase }) {
             <button
               key={item.id}
               onClick={() => scrollTo(item.id)}
-              className={`font-tc text-xs tracking-widest transition-colors py-1 relative ${
+              className={`font-tc text-xs tracking-normal transition-colors py-1 relative ${
                 activeSection === item.id
                   ? "text-[#E5B869]"
                   : "text-[#A19D94] hover:text-[#F4F1EA]"
@@ -283,7 +246,7 @@ function Navbar({ scrollTo, activeSection, onOpenBriefcase }) {
             >
               {item.label}
               {activeSection === item.id && (
-                <span className="absolute bottom-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-[#E5B869] to-[#FF4D2D]" />
+                <span className="absolute bottom-0 inset-x-0 h-px bg-[#E5B869]" />
               )}
             </button>
           ))}
@@ -292,31 +255,31 @@ function Navbar({ scrollTo, activeSection, onOpenBriefcase }) {
         <div className="hidden md:flex items-center space-x-3">
           <button
             onClick={onOpenBriefcase}
-            className="px-3.5 py-2 rounded-lg bg-[#141418] border border-[#E5B869]/40 hover:border-[#E5B869] text-[#E5B869] font-tc text-xs tracking-wider flex items-center gap-2 transition-all hover:bg-[#E5B869]/10"
+            className="px-3.5 py-2 rounded-lg bg-[#141418] border border-[#E5B869]/40 hover:border-[#E5B869] text-[#E5B869] font-tc text-xs tracking-normal flex items-center gap-2 transition-colors hover:bg-[#E5B869]/10"
           >
             <Briefcase className="w-3.5 h-3.5" />
-            <span>BRIEFCASE</span>
+            <span>Briefcase</span>
           </button>
           <button
             onClick={() => scrollTo("booking")}
-            className="px-3.5 py-2 rounded-lg bg-[#E5B869] text-[#09090B] font-tc text-xs tracking-wider font-bold flex items-center gap-2 transition-all hover:bg-[#F7DFAA]"
+            className="px-3.5 py-2 rounded-lg bg-[#E5B869] text-[#09090B] font-tc text-xs tracking-normal font-medium flex items-center gap-2 transition-colors hover:bg-[#F7DFAA]"
           >
             <Send className="w-3.5 h-3.5" />
-            <span>BOOK A CUT</span>
+            <span>Book a cut</span>
           </button>
         </div>
 
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="lg:hidden p-2 rounded-lg border border-[#E5B869]/30 text-[#E5B869]"
-          aria-label="Toggle menu"
+          className="lg:hidden p-2 rounded-lg border border-[#F1EEE7]/10 text-[#E5B869]"
+          aria-label="Toggle menu" aria-expanded={menuOpen}
         >
           {menuOpen ? <X className="w-5 h-5" /> : <Clapperboard className="w-5 h-5" />}
         </button>
       </div>
 
       {menuOpen && (
-        <div className="lg:hidden bg-[#0D0D10]/98 backdrop-blur-2xl border-b border-[#E5B869]/30 px-6 py-5 space-y-3">
+        <div className="lg:hidden bg-[#151517]  border-b border-[#F1EEE7]/10 px-6 py-5 space-y-3">
           {NAV.map((item) => (
             <button
               key={item.id}
@@ -324,7 +287,7 @@ function Navbar({ scrollTo, activeSection, onOpenBriefcase }) {
                 scrollTo(item.id);
                 setMenuOpen(false);
               }}
-              className="block w-full text-left font-tc text-xs tracking-widest py-2 text-[#F4F1EA] hover:text-[#E5B869]"
+              className="block w-full text-left font-tc text-xs tracking-normal py-2 text-[#F4F1EA] hover:text-[#E5B869]"
             >
               {item.label}
             </button>
@@ -335,7 +298,7 @@ function Navbar({ scrollTo, activeSection, onOpenBriefcase }) {
                 onOpenBriefcase();
                 setMenuOpen(false);
               }}
-              className="flex-1 py-2.5 rounded-lg bg-[#E5B869] text-[#09090B] font-tc font-bold text-xs"
+              className="flex-1 py-2.5 rounded-lg bg-[#E5B869] text-[#09090B] font-tc font-medium text-xs"
             >
               OPEN EDITOR&apos;S BRIEFCASE
             </button>
@@ -344,9 +307,9 @@ function Navbar({ scrollTo, activeSection, onOpenBriefcase }) {
                 scrollTo("booking");
                 setMenuOpen(false);
               }}
-              className="flex-1 py-2.5 rounded-lg border border-[#FF4D2D] text-[#FF4D2D] font-tc font-bold text-xs"
+              className="flex-1 py-2.5 rounded-lg border border-[#B4B1AA] text-[#B4B1AA] font-tc font-medium text-xs"
             >
-              BOOK A CUT
+              Book a cut
             </button>
           </div>
         </div>
@@ -355,355 +318,20 @@ function Navbar({ scrollTo, activeSection, onOpenBriefcase }) {
   );
 }
 
-function HeroSection({ scrollTo, onPlayShowreel, onOpenBriefcase }) {
-  const canvasContainerRef = useRef(null);
-
-  useEffect(() => {
-    const container = canvasContainerRef.current;
-    if (!container) return;
-
-    let disposed = false;
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x09090b, 0.032);
-
-    const camera = new THREE.PerspectiveCamera(
-      55,
-      container.clientWidth / Math.max(container.clientHeight, 1),
-      0.1,
-      1000
-    );
-    camera.position.set(0, 0.35, 20);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
-
-    const ambientLight = new THREE.AmbientLight(0xf4f1ea, 0.35);
-    scene.add(ambientLight);
-
-    const goldLight = new THREE.PointLight(0xe5b869, 4, 45);
-    goldLight.position.set(8, 6, 8);
-    scene.add(goldLight);
-
-    const crimsonLight = new THREE.PointLight(0xff4d2d, 3.5, 45);
-    crimsonLight.position.set(-9, -6, 6);
-    scene.add(crimsonLight);
-
-    const heroSculpture = new THREE.Group();
-    scene.add(heroSculpture);
-
-    const prismGeo = new THREE.OctahedronGeometry(2.3, 0);
-    const prismMat = new THREE.MeshStandardMaterial({
-      color: 0xe5b869,
-      metalness: 0.92,
-      roughness: 0.14,
-      emissive: 0x3b280c,
-      emissiveIntensity: 0.5,
-    });
-    const centralPrism = new THREE.Mesh(prismGeo, prismMat);
-    heroSculpture.add(centralPrism);
-
-    const wireGeo = new THREE.OctahedronGeometry(2.85, 1);
-    const wireMat = new THREE.MeshBasicMaterial({
-      color: 0xff4d2d,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.28,
-    });
-    const wirePrism = new THREE.Mesh(wireGeo, wireMat);
-    heroSculpture.add(wirePrism);
-
-    const filmStripGroup = new THREE.Group();
-    const frameCount = 42;
-    const frameGeo = new THREE.BoxGeometry(0.95, 0.62, 0.04);
-    const sprocketGeo = new THREE.BoxGeometry(0.12, 0.08, 0.06);
-    const frameMatDark = new THREE.MeshStandardMaterial({
-      color: 0x16161c,
-      metalness: 0.7,
-      roughness: 0.25,
-    });
-    const frameMatGold = new THREE.MeshStandardMaterial({
-      color: 0xe5b869,
-      metalness: 0.85,
-      roughness: 0.2,
-    });
-    const frameMatCrimson = new THREE.MeshStandardMaterial({
-      color: 0xff4d2d,
-      emissive: 0x661508,
-      metalness: 0.6,
-      roughness: 0.3,
-    });
-
-    const filmFrames = [];
-    for (let i = 0; i < frameCount; i++) {
-      const t = (i / frameCount) * Math.PI * 2;
-      const radius = 5.4 + Math.sin(t * 3) * 0.65;
-      const mat =
-        i % 7 === 0 ? frameMatCrimson : i % 3 === 0 ? frameMatGold : frameMatDark;
-      const frameMesh = new THREE.Mesh(frameGeo, mat);
-      frameMesh.position.set(
-        Math.cos(t) * radius,
-        Math.sin(t * 2) * 1.65,
-        Math.sin(t) * radius
-      );
-      frameMesh.lookAt(0, 0, 0);
-      frameMesh.rotateZ(t * 0.5);
-
-      const topSprocket = new THREE.Mesh(sprocketGeo, frameMatGold);
-      topSprocket.position.set(0, 0.35, 0);
-      frameMesh.add(topSprocket);
-
-      const bottomSprocket = new THREE.Mesh(sprocketGeo, frameMatGold);
-      bottomSprocket.position.set(0, -0.35, 0);
-      frameMesh.add(bottomSprocket);
-
-      filmStripGroup.add(frameMesh);
-      filmFrames.push({ mesh: frameMesh, baseAngle: t });
-    }
-    heroSculpture.add(filmStripGroup);
-
-    const waveCount = 180;
-    const waveGeo = new THREE.BufferGeometry();
-    const wavePositions = new Float32Array(waveCount * 3);
-    for (let i = 0; i < waveCount; i++) {
-      wavePositions[i * 3] = (i / waveCount - 0.5) * 24;
-      wavePositions[i * 3 + 1] = -4.2;
-      wavePositions[i * 3 + 2] = 0;
-    }
-    waveGeo.setAttribute("position", new THREE.BufferAttribute(wavePositions, 3));
-    const waveMat = new THREE.PointsMaterial({
-      color: 0xe5b869,
-      size: 0.11,
-      transparent: true,
-      opacity: 0.75,
-    });
-    const timelineWave = new THREE.Points(waveGeo, waveMat);
-    scene.add(timelineWave);
-
-    const dustCount = 320;
-    const dustGeo = new THREE.BufferGeometry();
-    const dustPos = new Float32Array(dustCount * 3);
-    const dustCol = new Float32Array(dustCount * 3);
-    const cGold = new THREE.Color(0xe5b869);
-    const cTerracotta = new THREE.Color(0xff4d2d);
-
-    for (let i = 0; i < dustCount * 3; i += 3) {
-      dustPos[i] = (Math.random() - 0.5) * 34;
-      dustPos[i + 1] = (Math.random() - 0.5) * 24;
-      dustPos[i + 2] = (Math.random() - 0.5) * 24;
-      const chosen = Math.random() > 0.25 ? cGold : cTerracotta;
-      dustCol[i] = chosen.r;
-      dustCol[i + 1] = chosen.g;
-      dustCol[i + 2] = chosen.b;
-    }
-    dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPos, 3));
-    dustGeo.setAttribute("color", new THREE.BufferAttribute(dustCol, 3));
-    const dustMat = new THREE.PointsMaterial({
-      size: 0.1,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.8,
-    });
-    const dustSystem = new THREE.Points(dustGeo, dustMat);
-    scene.add(dustSystem);
-
-    let mouseX = 0;
-    let mouseY = 0;
-    let scrollFactor = 0;
-
-    const onMouseMove = (event) => {
-      mouseX = (event.clientX / window.innerWidth - 0.5) * 2;
-      mouseY = (event.clientY / window.innerHeight - 0.5) * 2;
-    };
-    const onScroll = () => {
-      scrollFactor = window.scrollY * 0.002;
-    };
-    const onResize = () => {
-      if (!container) return;
-      camera.aspect = container.clientWidth / Math.max(container.clientHeight, 1);
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    };
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
-
-    let rafId;
-    const timer = new THREE.Timer();
-
-    const animate = (timestamp) => {
-      if (disposed) return;
-      rafId = requestAnimationFrame(animate);
-      timer.update(timestamp);
-      const t = timer.getElapsed();
-
-      centralPrism.rotation.y = t * 0.45;
-      centralPrism.rotation.x = Math.sin(t * 0.3) * 0.35;
-      wirePrism.rotation.y = -t * 0.28;
-      wirePrism.rotation.z = t * 0.2;
-
-      filmStripGroup.rotation.y = t * 0.22 + scrollFactor;
-      filmStripGroup.rotation.x = 0.28 + Math.sin(t * 0.4) * 0.12;
-
-      filmFrames.forEach((item, idx) => {
-        item.mesh.position.y = Math.sin(item.baseAngle * 2 + t * 1.4) * 1.75;
-        item.mesh.rotation.z = Math.sin(t + idx * 0.2) * 0.35;
-      });
-
-      const posAttr = timelineWave.geometry.attributes.position;
-      for (let i = 0; i < waveCount; i++) {
-        const x = posAttr.getX(i);
-        const y =
-          -4.3 +
-          Math.sin(x * 0.6 + t * 2.5) * 0.45 +
-          Math.cos(x * 1.4 - t * 1.8) * 0.25;
-        posAttr.setY(i, y);
-      }
-      posAttr.needsUpdate = true;
-
-      dustSystem.rotation.y = t * 0.04;
-      heroSculpture.position.x += (mouseX * 0.45 - heroSculpture.position.x) * 0.05;
-      heroSculpture.position.y += (-mouseY * 0.35 - heroSculpture.position.y) * 0.05;
-
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    return () => {
-      disposed = true;
-      cancelAnimationFrame(rafId);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
-      if (renderer.domElement.parentNode === container) {
-        container.removeChild(renderer.domElement);
-      }
-      prismGeo.dispose();
-      prismMat.dispose();
-      wireGeo.dispose();
-      wireMat.dispose();
-      frameGeo.dispose();
-      sprocketGeo.dispose();
-      frameMatDark.dispose();
-      frameMatGold.dispose();
-      frameMatCrimson.dispose();
-      waveGeo.dispose();
-      waveMat.dispose();
-      dustGeo.dispose();
-      dustMat.dispose();
-      renderer.dispose();
-      timer.dispose();
-    };
-  }, []);
-
-  return (
-    <section
-      id="hero"
-      className="relative min-h-screen flex items-center pt-28 pb-16 overflow-hidden scroll-mt-24"
-    >
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(circle at 78% 42%, rgba(229,184,105,0.14), transparent 32%), radial-gradient(circle at 12% 80%, rgba(255,77,45,0.08), transparent 28%), #09090B",
-        }}
-      />
-
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-10 items-center">
-          <div className="text-left max-w-xl">
-            <p className="kicker text-[#E5B869] mb-5">Video Editor & Colorist</p>
-            <h1 className="font-editorial text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[0.95] text-[#F4F1EA]">
-              Talha Bhatti
-            </h1>
-            <p className="mt-4 font-editorial text-2xl sm:text-3xl leading-tight text-[#E5B869]">
-              Cutting Stories Frame by Frame
-            </p>
-            <p className="lede mt-6">
-              I cut commercials, music videos, documentaries, and social films, then finish them with a DaVinci Resolve grade, clean sound, and masters ready for web, broadcast, and vertical.
-            </p>
-
-            <div className="mt-8 flex items-center gap-4">
-              <div className="font-editorial text-5xl sm:text-6xl font-black leading-none text-[#E5B869]">
-                5+
-              </div>
-              <div>
-                <div className="kicker text-[#F4F1EA]">Years Experience</div>
-                <p className="mt-1 font-body text-sm text-[#A19D94]">
-                  Picture edit, color, and sound
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-              <button
-                onClick={onPlayShowreel}
-                className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#E5B869] to-[#D49B42] text-[#09090B] font-tc font-bold text-xs tracking-[0.18em] uppercase shadow-xl shadow-[#E5B869]/20 hover:shadow-[#E5B869]/40 hover:scale-[1.03] transition-all flex items-center justify-center gap-3"
-              >
-                <Play className="w-4 h-4 fill-current" />
-                <span>Screen Showreel</span>
-              </button>
-              <button
-                onClick={onOpenBriefcase}
-                className="px-8 py-4 rounded-xl bg-[#121216]/90 border border-[#E5B869]/50 hover:border-[#FF4D2D] text-[#F4F1EA] font-tc font-semibold text-xs tracking-[0.18em] uppercase backdrop-blur-md transition-all flex items-center justify-center gap-3"
-              >
-                <Briefcase className="w-4 h-4 text-[#FF4D2D]" />
-                <span>Editor&apos;s Briefcase</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="relative mx-auto w-full max-w-[540px] aspect-square">
-            <div className="avatar-orbit absolute inset-3 rounded-full border border-dashed border-[#E5B869]/40" />
-            <div className="avatar-orbit-reverse absolute inset-10 rounded-full border border-[#FF4D2D]/35" />
-            <div className="absolute inset-8 rounded-full overflow-hidden border border-[#E5B869]/50 shadow-[0_0_80px_-12px_rgba(229,184,105,0.45)] bg-[#09090B]">
-              <div ref={canvasContainerRef} className="absolute inset-0" />
-              <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_42%,#09090B_88%)]" />
-            </div>
-            <div className="absolute left-0 top-8 px-3 py-1.5 rounded-full bg-[#141418]/90 border border-[#E5B869]/40 font-tc text-[10px] tracking-[0.18em] text-[#E5B869]">
-              EDIT BAY
-            </div>
-            <div className="absolute right-0 bottom-10 px-3 py-1.5 rounded-full bg-[#141418]/90 border border-[#FF4D2D]/40 font-tc text-[10px] tracking-[0.18em] text-[#FF4D2D]">
-              24 FPS
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+function HeroSection({ scrollTo, onPlayShowreel }) {
+  return <section id="hero" className="hero section-wrap">
+    <div className="hero-copy">
+      <p className="kicker">Talha Bhatti · Video editor and colorist</p>
+      <h1>Video editing.<br />A story in every frame.</h1>
+      <p className="lede">Commercial films, music videos, documentaries and social content. I shape your footage through picture editing, color grading and sound, from the first assembly to the final export.</p>
+      <div className="hero-actions"><button className="primary-button" onClick={onPlayShowreel}><Play size={16} />Watch showreel</button><button className="secondary-button" onClick={() => scrollTo("vault")}>Explore the films</button></div>
+    </div>
+    <div className="hero-film"><video src={showreel.videoUrl} poster={showreel.thumbnail} controls playsInline preload="none" aria-label="Talha Bhatti video editing showreel" /><div className="film-caption"><span>Picture, color and sound</span><span className="font-tc">{showreel.duration}</span></div></div>
+  </section>;
 }
 
 function EditorialMarquee() {
-  const items = [
-    "OFFLINE EDITING",
-    "PICTURE LOCK",
-    "DAVINCI RESOLVE COLOR",
-    "MUSIC VIDEO RHYTHM CUTS",
-    "COMMERCIAL SPOTS",
-    "DOCUMENTARY STORY",
-    "MOTION GRAPHICS",
-    "DIALOGUE & SOUND SYNC",
-    "SOCIAL CUTDOWNS",
-    "FRAME.IO REVIEWS",
-  ];
-
-  return (
-    <div className="border-y border-[#E5B869]/20 bg-[#0E0E12] py-3.5 overflow-hidden">
-      <div className="animate-marquee flex items-center space-x-10">
-        {[...items, ...items].map((text, idx) => (
-          <div key={`${text}-${idx}`} className="flex items-center space-x-10">
-            <span className="font-tc text-xs tracking-[0.25em] text-[#A19D94] uppercase">
-              {text}
-            </span>
-            <span className="text-[#FF4D2D] text-xs">✦</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+ return <div className="service-strip section-wrap"><span>Picture editing</span><span>Color grading</span><span>Sound design</span><span>Social video</span></div>;
 }
 
 function PortfolioVaultSection({
@@ -724,24 +352,24 @@ function PortfolioVaultSection({
 
   const filtered =
     selectedCategory === "all"
-      ? projects
-      : projects.filter((project) => project.category === selectedCategory);
+      ? [...recentFilms, ...projects]
+      : [...recentFilms, ...projects].filter((project) => project.category === selectedCategory);
 
   return (
-    <section id="vault" className="py-24 bg-[#09090B] relative scroll-mt-24">
+    <section id="vault" className="py-24 bg-[#101012] relative scroll-mt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-24 p-6 sm:p-8 rounded-3xl bg-[#101014] gold-border shadow-2xl">
+        <div className="mb-24 p-6 sm:p-8 rounded-3xl bg-[#101014] gold-border ">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
             <div>
-              <div className="font-tc text-xs text-[#FF4D2D] tracking-widest uppercase flex items-center gap-2 mb-1">
+              <div className="font-tc text-xs text-[#B4B1AA] tracking-normal flex items-center gap-2 mb-1">
                 <Sliders className="w-4 h-4" />
-                <span>COLOR SUITE • DRAG TO COMPARE THE GRADE</span>
+                <span>Color preview · Drag to compare</span>
               </div>
-              <h3 className="font-editorial text-2xl sm:text-3xl font-bold tracking-tight text-[#F4F1EA]">
-                Flat Log vs. Talha&apos;s Film-Print Look
+              <h3 className="font-editorial text-2xl sm:text-3xl font-medium tracking-tight text-[#F4F1EA]">
+                Explore a color treatment
               </h3>
             </div>
-            <div className="font-tc text-xs text-[#E5B869] bg-[#09090B] px-4 py-2 rounded-lg border border-[#E5B869]/30">
+            <div className="font-tc text-xs text-[#E5B869] bg-[#101012] px-4 py-2 rounded-lg border border-[#F1EEE7]/10">
               SPLIT: {sliderPos}% GRADED / {100 - sliderPos}% FLAT
             </div>
           </div>
@@ -757,15 +385,17 @@ function PortfolioVaultSection({
                 handleSliderMove(event.clientX);
               }
             }}
+            role="slider" tabIndex={0} aria-label="Color treatment comparison" aria-valuemin={0} aria-valuemax={100} aria-valuenow={sliderPos}
+            onKeyDown={(event) => { if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) { event.preventDefault(); setSliderPos(event.key === "Home" ? 0 : event.key === "End" ? 100 : Math.max(0, Math.min(100, sliderPos + (event.key === "ArrowRight" ? 5 : -5)))); } }}
             className="relative aspect-[16/8] sm:aspect-[21/9] w-full rounded-2xl overflow-hidden cursor-ew-resize select-none border border-white/10 touch-none"
           >
             <img
               src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1600&q=80"
-              alt="Flat, ungraded footage"
+              alt="Illustrative muted color preview"
               className="absolute inset-0 w-full h-full object-cover filter saturate-[0.28] contrast-[0.72] brightness-[1.08]"
             />
-            <span className="absolute top-4 right-4 px-3 py-1 rounded bg-black/75 font-tc text-[11px] text-gray-300 border border-white/15">
-              FLAT / LOG
+            <span className="absolute top-4 right-4 px-3 py-1 rounded bg-black/75 font-tc text-xs text-gray-300 border border-white/15">
+              Muted preview
             </span>
 
             <div
@@ -774,54 +404,57 @@ function PortfolioVaultSection({
             >
               <img
                 src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1600&q=80"
-                alt="Talha Bhatti film print grade"
+                alt="Illustrative warm color preview"
                 className="absolute inset-0 w-full h-full object-cover filter contrast-[1.28] saturate-[1.35] sepia-[0.18]"
               />
-              <span className="absolute top-4 left-4 px-3 py-1 rounded bg-[#E5B869] text-[#09090B] font-tc font-bold text-[11px]">
-                TALHA PRINT LUT
+              <span className="absolute top-4 left-4 px-3 py-1 rounded bg-[#E5B869] text-[#09090B] font-tc font-medium text-xs">
+                Color treatment
               </span>
             </div>
 
             <div
-              className="absolute top-0 bottom-0 w-[2px] bg-[#E5B869] shadow-[0_0_15px_#E5B869]"
+              className="absolute top-0 bottom-0 w-[2px] bg-[#E5B869] "
               style={{ left: `${sliderPos}%` }}
             >
-              <div className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#09090B] border-2 border-[#E5B869] text-[#E5B869] flex items-center justify-center shadow-xl">
+              <div className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#101012] border-2 border-[#E5B869] text-[#E5B869] flex items-center justify-center ">
                 <Sliders className="w-4 h-4" />
               </div>
             </div>
           </div>
         </div>
 
+        <p className="preview-note">Illustrative color comparison using the same still image</p>
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
           <div>
             <div className="kicker text-[#E5B869] mb-2 flex items-center gap-2">
-              <Film className="w-4 h-4 text-[#FF4D2D]" />
+              <Film className="w-4 h-4 text-[#B4B1AA]" />
               <span>Selected Cuts</span>
             </div>
-            <h2 className="font-editorial text-3xl sm:text-5xl font-bold tracking-tight text-[#F4F1EA]">
-              Film & Commercial Vault
+            <h2 className="font-editorial text-3xl sm:text-5xl font-medium tracking-tight text-[#F4F1EA]">
+              Selected video editing projects
             </h2>
             <p className="lede mt-3 max-w-xl">
-              Eight cuts by Talha Bhatti. Play a video, or open the edit notes in the briefcase.
+              Explore video editing projects and five recently added films. Choose a category or open a film to watch.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             {[
-              { id: "all", label: "ALL CUTS" },
-              { id: "commercials", label: "BRAND FILMS" },
-              { id: "ai-vfx", label: "VFX & SOCIAL" },
-              { id: "music", label: "MUSIC VIDEOS" },
-              { id: "trailers", label: "TRAILERS" },
-              { id: "docs", label: "DOCUMENTARIES" },
+              { id: "all", label: "All films" },
+              { id: "recent", label: "Recent films" },
+              { id: "commercials", label: "Brand films" },
+              { id: "ai-vfx", label: "VFX and social" },
+              { id: "music", label: "Music videos" },
+              { id: "trailers", label: "Trailers" },
+              { id: "docs", label: "Documentaries" },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setSelectedCategory(tab.id)}
-                className={`px-4 py-2 rounded-lg font-tc text-xs tracking-wider transition-all ${
+                aria-pressed={selectedCategory === tab.id}
+                className={`px-4 py-2 rounded-lg font-tc text-xs tracking-normal transition-colors ${
                   selectedCategory === tab.id
-                    ? "bg-[#E5B869] text-[#09090B] font-bold shadow-lg shadow-[#E5B869]/20"
+                    ? "bg-[#E5B869] text-[#09090B] font-medium  "
                     : "bg-[#121216] text-[#A19D94] border border-white/10 hover:text-[#F4F1EA]"
                 }`}
               >
@@ -835,7 +468,7 @@ function PortfolioVaultSection({
           {filtered.map((item) => (
             <article
               key={item.id}
-              className="group rounded-2xl bg-[#101014] gold-border gold-border-hover overflow-hidden transition-all duration-300 flex flex-col justify-between"
+              className="group rounded-2xl bg-[#101014] gold-border gold-border-hover overflow-hidden transition-colors duration-300 flex flex-col justify-between"
             >
               <div>
                 <div
@@ -849,9 +482,10 @@ function PortfolioVaultSection({
                     }
                   }}
                   data-cursor="play"
+                  aria-label={`Watch ${item.title}`}
                   onMouseEnter={(event) => {
                     const clip = event.currentTarget.querySelector("video");
-                    if (clip) clip.play().catch(() => {});
+                    if (clip && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) clip.play().catch(() => {});
                   }}
                   onMouseLeave={(event) => {
                     const clip = event.currentTarget.querySelector("video");
@@ -865,30 +499,29 @@ function PortfolioVaultSection({
                     src={item.videoUrl}
                     poster={item.thumbnail}
                     muted
-                    loop
                     playsInline
-                    preload="metadata"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
+                    preload="none"
+                    className="w-full h-full object-contain opacity-90"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#101014] via-transparent to-black/30" />
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded bg-[#09090B]/85 border border-[#E5B869]/30 font-tc text-[10px] text-[#E5B869]">
+                  <div className="absolute inset-0    " />
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded bg-[#101012]/85 border border-[#F1EEE7]/10 font-tc text-xs text-[#E5B869]">
                     {item.specs}
                   </div>
-                  <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded bg-[#09090B]/90 font-tc text-[11px] text-[#F4F1EA]">
+                  <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded bg-[#101012]/90 font-tc text-xs text-[#F4F1EA]">
                     {item.duration}
                   </div>
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="w-14 h-14 rounded-full bg-[#E5B869] text-[#09090B] flex items-center justify-center shadow-2xl">
+                    <div className="w-14 h-14 rounded-full bg-[#E5B869] text-[#09090B] flex items-center justify-center ">
                       <Play className="w-6 h-6 fill-current ml-0.5" />
                     </div>
                   </div>
                 </div>
 
                 <div className="p-6">
-                  <div className="font-tc text-[11px] text-[#FF4D2D] tracking-widest mb-1">
+                  <div className="font-tc text-xs text-[#B4B1AA] tracking-normal mb-1">
                     {item.client}
                   </div>
-                  <h3 className="font-editorial text-lg font-bold text-[#F4F1EA] group-hover:text-[#E5B869] transition-colors mb-2">
+                  <h3 className="font-editorial text-lg font-medium text-[#F4F1EA] group-hover:text-[#E5B869] transition-colors mb-2">
                     {item.title}
                   </h3>
                   <p className="font-body text-sm leading-relaxed text-[#A19D94]">
@@ -902,17 +535,17 @@ function PortfolioVaultSection({
                   {item.tools.slice(0, 2).map((tool) => (
                     <span
                       key={tool}
-                      className="px-2 py-0.5 rounded bg-[#18181F] font-tc text-[10px] text-[#B5B0A6]"
+                      className="px-2 py-0.5 rounded bg-[#18181F] font-tc text-xs text-[#B5B0A6]"
                     >
                       {tool}
                     </span>
                   ))}
                 </div>
                 <button
-                  onClick={() => onOpenBriefcase(item.caseIndex)}
-                  className="font-tc text-[11px] text-[#E5B869] hover:text-[#FF4D2D] flex items-center gap-1 transition-colors"
+                  onClick={() => item.caseIndex === undefined ? onSelectVideo(item) : onOpenBriefcase(item.caseIndex)}
+                  className="font-tc text-xs text-[#E5B869] hover:text-[#B4B1AA] flex items-center gap-1 transition-colors"
                 >
-                  <span>EDIT NOTES</span>
+                  <span>{item.caseIndex === undefined ? "Watch film" : "Edit notes"}</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -931,24 +564,24 @@ function TimelineWorkflowSection() {
   return (
     <section
       id="timeline"
-      className="py-24 bg-[#0D0D11] border-y border-[#E5B869]/15 scroll-mt-24"
+      className="py-24 bg-[#151517] border-y border-[#F1EEE7]/10 scroll-mt-24"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mb-14">
-          <div className="kicker text-[#FF4D2D] mb-2 flex items-center gap-2">
+          <div className="kicker text-[#B4B1AA] mb-2 flex items-center gap-2">
             <Scissors className="w-4 h-4" />
             <span>How a Cut Gets Made</span>
           </div>
-          <h2 className="font-editorial text-3xl sm:text-5xl font-bold tracking-tight text-[#F4F1EA] mb-4">
-            Post-Production Pipeline
+          <h2 className="font-editorial text-3xl sm:text-5xl font-medium tracking-tight text-[#F4F1EA] mb-4">
+            From footage to final film
           </h2>
           <p className="lede">
             Click a track to move the playhead. This is the path Talha uses from first selects to a graded master.
           </p>
         </div>
 
-        <div className="rounded-3xl bg-[#09090B] gold-border p-6 sm:p-8 shadow-2xl">
-          <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-6 font-tc text-[11px] text-[#A19D94]">
+        <div className="rounded-3xl bg-[#101012] gold-border p-6 sm:p-8 ">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-6 font-tc text-xs text-[#A19D94]">
             <span>SEQUENCE: TALHA_EDIT_MASTER</span>
             <span className="text-[#E5B869]">PLAYHEAD: {stage.tc}</span>
           </div>
@@ -960,44 +593,44 @@ function TimelineWorkflowSection() {
                 <button
                   key={item.track}
                   onClick={() => setActiveStage(idx)}
-                  className={`w-full text-left cursor-pointer rounded-xl p-3.5 transition-all border flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
+                  aria-pressed={isSelected}
+                  className={`w-full text-left cursor-pointer rounded-xl p-3.5 transition-colors border flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
                     isSelected
-                      ? "bg-gradient-to-r from-[#E5B869]/20 via-[#FF4D2D]/15 to-transparent border-[#E5B869]"
+                      ? "    border-[#E5B869]"
                       : "bg-[#121216] border-white/5 hover:border-white/20"
                   }`}
-                  style={{ marginLeft: `${idx * 3}%`, width: `${100 - idx * 3}%` }}
                 >
                   <div className="flex items-center gap-3">
                     <span
                       className={`w-2.5 h-2.5 rounded-full ${
-                        isSelected ? "bg-[#FF4D2D] animate-ping" : "bg-[#E5B869]/50"
+                        isSelected ? "bg-[#B4B1AA] " : "bg-[#E5B869]/50"
                       }`}
                     />
-                    <span className="font-tc text-xs font-bold text-[#E5B869]">
+                    <span className="font-tc text-xs font-medium text-[#E5B869]">
                       {item.track}
                     </span>
                   </div>
-                  <span className="font-tc text-[11px] text-[#A19D94]">{item.tc}</span>
+                  <span className="font-tc text-xs text-[#A19D94]">{item.tc}</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#121217] border border-[#E5B869]/30 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="p-6 rounded-2xl bg-[#121217] border border-[#F1EEE7]/10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <div className="font-tc text-xs text-[#FF4D2D] mb-1">
+              <div className="font-tc text-xs text-[#B4B1AA] mb-1">
                 STAGE 0{activeStage + 1} // {stage.track}
               </div>
-              <h3 className="font-editorial text-2xl font-bold text-[#F4F1EA] mb-2">
+              <h3 className="font-editorial text-2xl font-medium text-[#F4F1EA] mb-2">
                 {stage.title}
               </h3>
               <p className="font-body text-sm text-[#B5B0A6] max-w-2xl">{stage.details}</p>
             </div>
-            <div className="shrink-0 p-4 rounded-xl bg-[#09090B] border border-white/10">
-              <div className="font-tc text-[10px] text-[#A19D94] uppercase mb-1">
-                WHAT YOU RECEIVE
+            <div className="shrink-0 p-4 rounded-xl bg-[#101012] border border-white/10">
+              <div className="font-tc text-xs text-[#A19D94] mb-1">
+                What you receive
               </div>
-              <div className="font-tc text-xs font-bold text-[#E5B869]">
+              <div className="font-tc text-xs font-medium text-[#E5B869]">
                 {stage.deliverable}
               </div>
             </div>
@@ -1010,11 +643,11 @@ function TimelineWorkflowSection() {
 
 function ArsenalSection() {
   return (
-    <section id="arsenal" className="py-24 bg-[#09090B] scroll-mt-24">
+    <section id="arsenal" className="py-24 bg-[#101012] scroll-mt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mb-16">
           <div className="kicker text-[#E5B869] mb-2">Edit Bay</div>
-          <h2 className="font-editorial text-3xl sm:text-5xl font-bold tracking-tight text-[#F4F1EA] mb-4">
+          <h2 className="font-editorial text-3xl sm:text-5xl font-medium tracking-tight text-[#F4F1EA] mb-4">
             Tools Behind the Cut
           </h2>
           <p className="lede">
@@ -1028,32 +661,23 @@ function ArsenalSection() {
             return (
               <div
                 key={tool.name}
-                className="p-6 rounded-2xl bg-[#101015] gold-border gold-border-hover transition-all group"
+                className="p-6 rounded-2xl bg-[#101015] gold-border gold-border-hover transition-colors group"
               >
                 <div className="flex items-center justify-between mb-5">
-                  <div className="w-11 h-11 rounded-xl bg-[#181820] border border-[#E5B869]/30 flex items-center justify-center text-[#E5B869] group-hover:text-[#FF4D2D] transition-colors">
+                  <div className="w-11 h-11 rounded-xl bg-[#181820] border border-[#F1EEE7]/10 flex items-center justify-center text-[#E5B869] group-hover:text-[#B4B1AA] transition-colors">
                     <Icon className="w-5 h-5" />
                   </div>
-                  <span className="font-tc text-[10px] px-2.5 py-1 rounded bg-[#FF4D2D]/15 text-[#FF4D2D] border border-[#FF4D2D]/30 font-bold">
+                  <span className="font-tc text-xs px-2.5 py-1 rounded bg-[#B4B1AA]/15 text-[#B4B1AA] border border-[#B4B1AA]/30 font-medium">
                     {tool.badge}
                   </span>
                 </div>
-                <h3 className="font-body font-bold text-base text-[#F4F1EA] mb-1">
+                <h3 className="font-body font-medium text-base text-[#F4F1EA] mb-1">
                   {tool.name}
                 </h3>
                 <p className="font-body text-xs text-[#A19D94] mb-5 min-h-[32px]">
                   {tool.role}
                 </p>
-                <div className="flex items-center justify-between font-tc text-[11px] mb-1.5">
-                  <span className="text-[#A19D94]">DAILY USE</span>
-                  <span className="text-[#E5B869] font-bold">{tool.pct}%</span>
-                </div>
-                <div className="w-full h-1.5 bg-[#1B1B22] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-[#E5B869] to-[#FF4D2D] rounded-full"
-                    style={{ width: `${tool.pct}%` }}
-                  />
-                </div>
+
               </div>
             );
           })}
@@ -1064,78 +688,7 @@ function ArsenalSection() {
 }
 
 function AwardsAndReviewsSection() {
-  const stats = [
-    { num: "Picture", label: "ASSEMBLY TO FINE CUT" },
-    { num: "Color", label: "DAVINCI FINISHING" },
-    { num: "Sound", label: "SYNC, BEDS & HITS" },
-    { num: "Delivery", label: "MASTER + SOCIAL CUTS" },
-  ];
-
-  const reviews = [
-    {
-      quote:
-        "Talha found the rhythm in a messy assembly and sent back a cut that finally felt like the film we shot.",
-      author: "PRODUCTION CLIENT",
-      role: "BRAND FILM",
-    },
-    {
-      quote:
-        "Notes came back on Frame.io the same day, and the grade matched from the hero shot to the vertical cutdown.",
-      author: "CREATIVE TEAM",
-      role: "CAMPAIGN FINISH",
-    },
-    {
-      quote:
-        "The music video stayed on the beat without feeling chopped. Performance, chorus, and titles all landed together.",
-      author: "ARTIST TEAM",
-      role: "MUSIC VIDEO",
-    },
-  ];
-
-  return (
-    <section className="py-24 bg-[#0D0D11] border-t border-[#E5B869]/15">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
-          {stats.map((stat) => (
-            <div key={stat.label} className="p-6 rounded-2xl bg-[#111116] gold-border text-center">
-              <div className="font-editorial text-3xl sm:text-4xl font-black text-[#E5B869] mb-2">
-                {stat.num}
-              </div>
-              <div className="font-tc text-[11px] tracking-widest text-[#A19D94]">
-                {stat.label}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {reviews.map((rev) => (
-            <div
-              key={rev.role}
-              className="p-8 rounded-2xl bg-[#101014] gold-border flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex gap-1 text-[#E5B869] mb-4">
-                  {[...Array(5)].map((_, star) => (
-                    <Star key={star} className="w-4 h-4 fill-current" />
-                  ))}
-                </div>
-                <p className="font-body text-sm text-[#D6D2C9] italic leading-relaxed mb-6">
-                  “{rev.quote}”
-                </p>
-              </div>
-              <div className="pt-4 border-t border-white/10">
-                <div className="font-tc text-xs font-bold text-[#F4F1EA]">{rev.author}</div>
-                <div className="font-tc text-[10px] text-[#FF4D2D] tracking-wider">
-                  {rev.role}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+ return <section className="delivery-section section-wrap"><div><p className="kicker">The finishing details</p><h2>Ready for the screen<br />you have in mind</h2></div><div><p className="lede">A film, a YouTube release or a vertical social edit each needs its own finish. Share your intended platforms so the picture, sound and export format can be planned together.</p><p className="delivery-list">Picture edit · Color grade · Sound · Final exports</p></div></section>;
 }
 
 function BookingSection() {
@@ -1158,15 +711,15 @@ function BookingSection() {
   };
 
   return (
-    <section id="booking" className="py-24 bg-[#09090B] border-t border-[#E5B869]/15 scroll-mt-24">
+    <section id="booking" className="py-24 bg-[#101012] border-t border-[#F1EEE7]/10 scroll-mt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           <div className="lg:col-span-5">
-            <div className="kicker text-[#FF4D2D] mb-3 flex items-center gap-2">
-              <Radio className="w-4 h-4 animate-pulse" />
+            <div className="kicker text-[#B4B1AA] mb-3 flex items-center gap-2">
+              <Radio className="w-4 h-4 " />
               <span>Now Booking Edit Sessions</span>
             </div>
-            <h2 className="font-editorial text-3xl sm:text-5xl font-bold tracking-tight text-[#F4F1EA] mb-5 leading-tight">
+            <h2 className="font-editorial text-3xl sm:text-5xl font-medium tracking-tight text-[#F4F1EA] mb-5 leading-tight">
               Hire Talha Bhatti to Cut Your Next Film
             </h2>
             <p className="lede mb-8">
@@ -1187,20 +740,20 @@ function BookingSection() {
             <div className="space-y-4 font-tc text-xs text-[#F4F1EA]">
               <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-3 hover:text-[#E5B869]">
                 <Mail className="w-4 h-4 text-[#E5B869]" />
-                <span>{CONTACT_EMAIL.toUpperCase()}</span>
+                <span>{CONTACT_EMAIL}</span>
               </a>
               <div className="flex items-center gap-3">
-                <Award className="w-4 h-4 text-[#FF4D2D]" />
-                <span>PREMIERE, RESOLVE & FRAME.IO</span>
+                <Award className="w-4 h-4 text-[#B4B1AA]" />
+                <span>Premiere, resolve & frame.io</span>
               </div>
             </div>
           </div>
 
-          <div className="lg:col-span-7 p-8 sm:p-10 rounded-3xl bg-[#101014] gold-border shadow-2xl">
+          <div className="lg:col-span-7 p-8 sm:p-10 rounded-3xl bg-[#101014] gold-border ">
             {sent ? (
               <div className="py-16 text-center">
                 <CheckCircle className="w-16 h-16 text-[#E5B869] mx-auto mb-4" />
-                <h3 className="font-editorial text-2xl font-bold text-[#F4F1EA] mb-2">
+                <h3 className="font-editorial text-2xl font-medium text-[#F4F1EA] mb-2">
                   Brief ready to send
                 </h3>
                 <p className="font-body text-sm text-[#A19D94] max-w-md mx-auto">
@@ -1211,15 +764,15 @@ function BookingSection() {
                   onClick={() => setSent(false)}
                   className="mt-6 font-tc text-xs text-[#E5B869] hover:text-[#F4F1EA]"
                 >
-                  EDIT THE BRIEF
+                  Edit the brief
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="name" className="block font-tc text-[11px] text-[#E5B869] tracking-wider mb-2">
-                      YOUR NAME
+                    <label htmlFor="name" className="block font-tc text-xs text-[#E5B869] tracking-normal mb-2">
+                      Your name
                     </label>
                     <input
                       id="name"
@@ -1227,12 +780,12 @@ function BookingSection() {
                       type="text"
                       required
                       placeholder="Your name"
-                      className="w-full bg-[#09090B] border border-white/15 rounded-xl px-4 py-3 text-sm text-[#F4F1EA] focus:outline-none focus:border-[#E5B869]"
+                      className="w-full bg-[#101012] border border-white/15 rounded-xl px-4 py-3 text-sm text-[#F4F1EA] focus:outline-none focus:border-[#E5B869]"
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block font-tc text-[11px] text-[#E5B869] tracking-wider mb-2">
-                      EMAIL
+                    <label htmlFor="email" className="block font-tc text-xs text-[#E5B869] tracking-normal mb-2">
+                      Email
                     </label>
                     <input
                       id="email"
@@ -1240,20 +793,20 @@ function BookingSection() {
                       type="email"
                       required
                       placeholder="you@studio.com"
-                      className="w-full bg-[#09090B] border border-white/15 rounded-xl px-4 py-3 text-sm text-[#F4F1EA] focus:outline-none focus:border-[#E5B869]"
+                      className="w-full bg-[#101012] border border-white/15 rounded-xl px-4 py-3 text-sm text-[#F4F1EA] focus:outline-none focus:border-[#E5B869]"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="format" className="block font-tc text-[11px] text-[#E5B869] tracking-wider mb-2">
-                      WHAT NEEDS CUTTING
+                    <label htmlFor="format" className="block font-tc text-xs text-[#E5B869] tracking-normal mb-2">
+                      What needs cutting
                     </label>
                     <select
                       id="format"
                       name="format"
-                      className="w-full bg-[#09090B] border border-white/15 rounded-xl px-4 py-3 text-sm text-[#F4F1EA] focus:outline-none focus:border-[#E5B869]"
+                      className="w-full bg-[#101012] border border-white/15 rounded-xl px-4 py-3 text-sm text-[#F4F1EA] focus:outline-none focus:border-[#E5B869]"
                     >
                       <option>Brand commercial</option>
                       <option>Music video</option>
@@ -1264,24 +817,24 @@ function BookingSection() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="budget" className="block font-tc text-[11px] text-[#E5B869] tracking-wider mb-2">
-                      EDIT BUDGET
+                    <label htmlFor="budget" className="block font-tc text-xs text-[#E5B869] tracking-normal mb-2">
+                      Edit budget
                     </label>
                     <select
                       id="budget"
                       name="budget"
-                      className="w-full bg-[#09090B] border border-white/15 rounded-xl px-4 py-3 text-sm text-[#F4F1EA] focus:outline-none focus:border-[#E5B869]"
+                      className="w-full bg-[#101012] border border-white/15 rounded-xl px-4 py-3 text-sm text-[#F4F1EA] focus:outline-none focus:border-[#E5B869]"
                     >
-                      <option>$800 – $2,000</option>
-                      <option>$2,000 – $6,000</option>
+                      <option>$800 to $2,000</option>
+                      <option>$2,000 to $6,000</option>
                       <option>$6,000+</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="brief" className="block font-tc text-[11px] text-[#E5B869] tracking-wider mb-2">
-                    FOOTAGE, RUNTIME & DEADLINE
+                  <label htmlFor="brief" className="block font-tc text-xs text-[#E5B869] tracking-normal mb-2">
+                    Footage, runtime & deadline
                   </label>
                   <textarea
                     id="brief"
@@ -1289,16 +842,16 @@ function BookingSection() {
                     rows={4}
                     required
                     placeholder="Camera, rough runtime, references, and the date you need the master..."
-                    className="w-full bg-[#09090B] border border-white/15 rounded-xl px-4 py-3 text-sm text-[#F4F1EA] focus:outline-none focus:border-[#E5B869]"
+                    className="w-full bg-[#101012] border border-white/15 rounded-xl px-4 py-3 text-sm text-[#F4F1EA] focus:outline-none focus:border-[#E5B869]"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-[#E5B869] to-[#FF4D2D] text-[#09090B] font-tc font-bold text-xs tracking-[0.2em] uppercase shadow-xl hover:opacity-95 transition flex items-center justify-center gap-2"
+                  className="w-full py-4 rounded-xl    text-[#09090B] font-tc font-medium text-xs tracking-normal  hover:opacity-95 transition flex items-center justify-center gap-2"
                 >
                   <Send className="w-4 h-4" />
-                  <span>SEND EDIT BRIEF</span>
+                  <span>Send edit brief</span>
                 </button>
               </form>
             )}
@@ -1311,17 +864,17 @@ function BookingSection() {
 
 function Footer({ scrollTo }) {
   return (
-    <footer className="bg-[#070709] border-t border-[#E5B869]/15 py-12">
+    <footer className="bg-[#070709] border-t border-[#F1EEE7]/10 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
         <button onClick={() => scrollTo("hero")} className="flex items-center gap-3">
           <img src="/logo.svg" alt="" className="w-8 h-8 rounded-full" />
-          <span className="font-editorial font-bold tracking-[0.16em] text-sm text-[#F4F1EA]">
-            TALHA <span className="text-[#E5B869]">BHATTI</span> · VIDEO EDITOR
+          <span className="font-editorial font-medium tracking-normal text-sm text-[#F4F1EA]">
+            Talha <span className="text-[#E5B869]">Bhatti</span> · Video editor
           </span>
         </button>
 
-        <div className="font-tc text-[11px] text-[#A19D94] text-center">
-          © {new Date().getFullYear()} TALHA BHATTI · PICTURE, COLOR & FINISH
+        <div className="font-tc text-xs text-[#A19D94] text-center">
+          © {new Date().getFullYear()} Talha Bhatti · Picture, color and finish
         </div>
 
         <div className="flex items-center gap-4 text-[#A19D94]">
@@ -1350,16 +903,16 @@ function EditorsBriefcaseModal({ activeIndex, setActiveIndex, onClose, onPlayCas
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 "
       role="dialog"
       aria-modal="true"
       aria-label="Editor briefcase"
     >
       <button className="absolute inset-0" aria-label="Close briefcase" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-3xl rounded-3xl bg-[#0F0F13] gold-border shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
-        <div className="px-6 py-4 bg-[#15151B] border-b border-[#E5B869]/20 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 text-[#E5B869] font-tc text-xs tracking-widest">
-            <Briefcase className="w-4 h-4 text-[#FF4D2D]" />
+      <div className="relative z-10 w-full max-w-3xl rounded-3xl bg-[#0F0F13] gold-border  overflow-hidden max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 bg-[#15151B] border-b border-[#F1EEE7]/10 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 text-[#E5B869] font-tc text-xs tracking-normal">
+            <Briefcase className="w-4 h-4 text-[#B4B1AA]" />
             <span>TALHA&apos;S EDIT BRIEFCASE</span>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg text-[#A19D94] hover:text-[#F4F1EA]" aria-label="Close">
@@ -1372,9 +925,9 @@ function EditorsBriefcaseModal({ activeIndex, setActiveIndex, onClose, onPlayCas
             <button
               key={item.code}
               onClick={() => setActiveIndex(idx)}
-              className={`px-3.5 py-1.5 rounded-lg font-tc text-[11px] transition ${
+              className={`px-3.5 py-1.5 rounded-lg font-tc text-xs transition ${
                 activeIndex === idx
-                  ? "bg-[#E5B869] text-[#09090B] font-bold"
+                  ? "bg-[#E5B869] text-[#09090B] font-medium"
                   : "bg-[#181820] text-[#A19D94] hover:text-[#F4F1EA]"
               }`}
             >
@@ -1385,20 +938,20 @@ function EditorsBriefcaseModal({ activeIndex, setActiveIndex, onClose, onPlayCas
 
         <div className="p-6 sm:p-8 space-y-6">
           <div>
-            <div className="font-tc text-xs text-[#FF4D2D] mb-1">{current.code}</div>
-            <h3 className="font-editorial text-2xl sm:text-3xl font-bold text-[#F4F1EA]">
+            <div className="font-tc text-xs text-[#B4B1AA] mb-1">{current.code}</div>
+            <h3 className="font-editorial text-2xl sm:text-3xl font-medium text-[#F4F1EA]">
               {current.title}
             </h3>
             <div className="font-tc text-xs text-[#A19D94] mt-1">PROJECT: {current.client}</div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 rounded-xl bg-[#09090B] border border-white/10">
-              <div className="font-tc text-[10px] text-[#E5B869] mb-1.5">THE EDIT PROBLEM</div>
+            <div className="p-4 rounded-xl bg-[#101012] border border-white/10">
+              <div className="font-tc text-xs text-[#E5B869] mb-1.5">The edit problem</div>
               <p className="font-body text-xs text-[#B5B0A6] leading-relaxed">{current.challenge}</p>
             </div>
-            <div className="p-4 rounded-xl bg-[#09090B] border border-white/10">
-              <div className="font-tc text-[10px] text-[#FF4D2D] mb-1.5">HOW TALHA CUT IT</div>
+            <div className="p-4 rounded-xl bg-[#101012] border border-white/10">
+              <div className="font-tc text-xs text-[#B4B1AA] mb-1.5">How talha cut it</div>
               <p className="font-body text-xs text-[#B5B0A6] leading-relaxed">{current.solution}</p>
             </div>
           </div>
@@ -1407,9 +960,9 @@ function EditorsBriefcaseModal({ activeIndex, setActiveIndex, onClose, onPlayCas
             {current.metrics.map((metric) => (
               <span
                 key={metric}
-                className="px-3 py-1.5 rounded-lg bg-[#E5B869]/10 border border-[#E5B869]/30 font-tc text-xs text-[#E5B869]"
+                className="px-3 py-1.5 rounded-lg bg-[#E5B869]/10 border border-[#F1EEE7]/10 font-tc text-xs text-[#E5B869]"
               >
-                ✦ {metric}
+                {metric}
               </span>
             ))}
           </div>
@@ -1417,13 +970,13 @@ function EditorsBriefcaseModal({ activeIndex, setActiveIndex, onClose, onPlayCas
           <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
             <button
               onClick={() => onPlayCase(current.video)}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-[#E5B869] to-[#FF4D2D] text-[#09090B] font-tc font-bold text-xs tracking-wider flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl    text-[#09090B] font-tc font-medium text-xs tracking-normal flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4 fill-current" />
-              <span>SCREEN THIS CUT</span>
+              <span>Screen this cut</span>
             </button>
             <button onClick={onClose} className="font-tc text-xs text-[#A19D94] hover:text-[#F4F1EA]">
-              CLOSE BRIEFCASE
+              Close briefcase
             </button>
           </div>
         </div>
@@ -1435,19 +988,19 @@ function EditorsBriefcaseModal({ activeIndex, setActiveIndex, onClose, onPlayCas
 function ScreeningModal({ video, onClose }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/92 backdrop-blur-xl"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 "
       role="dialog"
       aria-modal="true"
       aria-label="Screening room"
     >
       <button className="absolute inset-0" aria-label="Close screening" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-4xl rounded-3xl bg-[#0D0D11] gold-border overflow-hidden shadow-2xl">
-        <div className="px-6 py-4 bg-[#14141A] border-b border-[#E5B869]/20 flex items-center justify-between">
+      <div className="relative z-10 w-full max-w-4xl rounded-3xl bg-[#151517] gold-border overflow-hidden ">
+        <div className="px-6 py-4 bg-[#14141A] border-b border-[#F1EEE7]/10 flex items-center justify-between">
           <div>
-            <div className="font-tc text-[10px] text-[#FF4D2D] tracking-widest">
+            <div className="font-tc text-xs text-[#B4B1AA] tracking-normal">
               {video.specs || "SCREENING ROOM"}
             </div>
-            <h3 className="font-editorial text-base sm:text-lg font-bold text-[#F4F1EA]">
+            <h3 className="font-editorial text-base sm:text-lg font-medium text-[#F4F1EA]">
               {video.title}
             </h3>
           </div>
@@ -1463,6 +1016,7 @@ function ScreeningModal({ video, onClose }) {
               poster={video.thumbnail}
               controls
               autoPlay
+              preload="metadata"
               playsInline
               className="w-full h-full bg-black"
             />
@@ -1473,12 +1027,12 @@ function ScreeningModal({ video, onClose }) {
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover opacity-80"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/40" />
+              <div className="absolute inset-0  from-black  " />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
                 <div className="w-16 h-16 rounded-full bg-[#E5B869] text-[#09090B] flex items-center justify-center mb-4">
                   <Play className="w-7 h-7 fill-current ml-1" />
                 </div>
-                <p className="font-tc text-[11px] tracking-[0.22em] text-[#E5B869]">
+                <p className="font-tc text-xs tracking-normal text-[#E5B869]">
                   MASTER STILL · {video.duration}
                 </p>
                 <p className="font-body text-sm text-[#F4F1EA] mt-2 max-w-md">
@@ -1491,14 +1045,14 @@ function ScreeningModal({ video, onClose }) {
 
         <div className="p-6 bg-[#111116] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <p className="font-tc text-[10px] text-[#FF4D2D] tracking-widest mb-1">{video.client}</p>
+            <p className="font-tc text-xs text-[#B4B1AA] tracking-normal mb-1">{video.client}</p>
             <p className="font-body text-xs sm:text-sm text-[#B5B0A6]">{video.description}</p>
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 px-5 py-2 rounded-lg bg-[#E5B869] text-[#09090B] font-tc font-bold text-xs"
+            className="shrink-0 px-5 py-2 rounded-lg bg-[#E5B869] text-[#09090B] font-tc font-medium text-xs"
           >
-            EXIT SCREENING
+            Exit screening
           </button>
         </div>
       </div>
